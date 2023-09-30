@@ -1,0 +1,9 @@
+# https://github.com/nkanaev/yarr
+# https://github.com/arsfeld/yarr/blob/master/dockerfile
+services:
+    image: arsfeld/yarr 
+    container_name: yarr
+    ports:
+     - "7070:7070"
+    volumes:
+        - ./data:./data

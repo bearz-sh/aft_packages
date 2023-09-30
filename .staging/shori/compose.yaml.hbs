@@ -1,0 +1,21 @@
+# https://github.com/go-shiori/shiori
+# https://github.com/go-shiori/shiori/blob/master/docker-compose.yaml
+services:
+  shiori:
+    build:
+      context: .
+      dockerfile: Dockerfile.compose
+    container_name: shiori
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./dev-data:/srv/shiori"
+      - ".:/src/shiori"
+    restart: unless-stopped
+    links:
+      - "postgres"
+      - "mariadb"
+    environment:
+      SHIORI_DIR: /srv/shiori
+      #SHIORI_DATABASE_URL: mysql://shiori:shiori@(mariadb)/shiori?charset=utf8mb4
+      SHIORI_DATABASE_URL: postgres://shiori:shiori@postgres/shiori?sslmode=disable

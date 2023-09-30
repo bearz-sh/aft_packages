@@ -1,0 +1,17 @@
+  influxdb:
+    container_name: influxdb 
+    image: influxdb:latest
+    restart: always
+    networks:
+      - localnet
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - INFLUXDB_DB=home_assistant
+      - DOCKER_INFLUXDB_INIT_USERNAME=influx_user
+      - DOCKER_INFLUXDB_INIT_PASSWORD=CrazyStr0ngPa$$word
+      - DOCKER_INFLUXDB_INIT_ORG=ha-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=ha-bucket
+    ports:
+      - 8086:8086
+    volumes:
+      - /c/local-docker/home-assistant/influxdb:/var/lib/influxdb2

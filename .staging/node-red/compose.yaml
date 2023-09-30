@@ -1,0 +1,24 @@
+
+services:
+  nodered:
+    container_name: nodered
+    image: nodered/node-red
+    restart: always
+    networks:
+      - localnet
+    environment:
+      - TZ="{{common_timezone}}"
+      - NODE_OPTIONS="{{nodered.node_options}}"
+      - NODE_RED_ENABLE_PROJECTS="{{nodered.enable_projects}}"
+      - NODE_RED_ENABLE_SAFE_MODE="{{nodered.safe_mode}}"
+
+    ports:
+      - 1880:1880
+    volumes:
+      - {{ volumes_root }}/nodered/data:/data
+
+    depends_on:
+      - home-assistant
+      - mosquitto
+    environment:
+      TZ: "Australia/Brisbane"

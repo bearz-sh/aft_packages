@@ -1,0 +1,24 @@
+services:
+  n8n:
+    # n8nio/n8n:{{ n8n.version }}
+    image: {{ image.name }}:{{ image.tag }}
+    container_name: {{ service }}
+    hostname: {{ hostname }}
+    restart: {{ restart }}
+    volumes:
+      - "{{ volumes.etc }}:/root/.n8n"
+    environment:
+      - GENERIC_TIMEZONE={{ tz }}
+      - TZ={{ tx }}
+{{#if postgres.enabled }}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE= {{ postgres.database }}
+      - DB_POSTGRESDB_HOST={{ postgres.host }}
+      - DB_POSTGRESDB_PORT={{ postgres.port }}
+      - DB_POSTGRESDB_USER={{ postgres.user }} 
+      - DB_POSTGRESDB_SCHEMA={{ postgres.schema }}
+      - DB_POSTGRESDB_PASSWORD=${{ POSTGRES_PASSWORD }} 
+{{/if}}
+{{#unless traefik}}
+    ports:
+      - "{{ ports.default }}:5678"

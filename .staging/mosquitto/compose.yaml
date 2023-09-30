@@ -1,0 +1,17 @@
+version: '3'
+services:
+mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    restart: always
+    networks:
+      - localnet
+    ports:
+      - 1883:1883
+      - 1884:1884
+    volumes:
+      - /c/local-docker/home-assistant/mosquitto/config:/mosquitto/config
+      - /c/local-docker/home-assistant/mosquitto/data:/mosquitto/data
+      - /c/local-docker/home-assistant/mosquitto/log:/mosquitto/log
+    environment:
+      TZ: "Australia/Brisbane"

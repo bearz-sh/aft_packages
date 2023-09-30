@@ -1,0 +1,10 @@
+# https://github.com/42wim/matterbridge
+# https://gitlab.com/NickBusey/HomelabOS/-/blob/dev/roles/matterbridge/templates/docker-compose.matterbridge.yml.j2?ref_type=heads
+version: '3'
+
+services:
+  app:
+    image: 42wim/matterbridge:{{ matterbridge.version }}
+    restart: unless-stopped
+    volumes:
+      - {{ volumes_root }}/matterbridge/matterbridge.toml:/matterbridge.toml

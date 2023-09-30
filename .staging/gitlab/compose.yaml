@@ -1,0 +1,112 @@
+
+# based on https://gitlab.com/NickBusey/HomelabOS/-/blob/dev/roles/gitlab/templates/docker-compose.gitlab.yml.j2?ref_type=heads
+  gitlab:
+    restart: unless-stopped
+    image: gitlab/gitlab-ce:{{ gitlab.version }}
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.{{ domain }}'
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        gitlab_rails['gitlab_shell_ssh_port'] = {{ gitlab.ssh_port }}
+{% if gitlab.aws_lfs_enabled %}
+        gitlab_rails['lfs_enabled'] = true
+        gitlab_rails['lfs_object_store_enabled'] = true
+        gitlab_rails['lfs_object_store_remote_directory'] = "{{ gitlab.aws_lfs_bucket }}"
+        gitlab_rails['lfs_object_store_connection'] = {
+          'provider' => 'AWS',
+          'region' => '{{ aws.region }}',
+          'aws_access_key_id' => '{{ aws.access_key }}',
+          'aws_secret_access_key' => '{{ aws.secret_key }}'
+        }
+        gitlab_rails['lfs_object_store_connection'] = {
+          'provider' => 'AWS',
+          'region' => '{{ aws.region }}',
+          'aws_access_key_id' => '{{ aws.access_key }}',
+          'aws_secret_access_key' => '{{ aws.secret_key }}'
+        }
+{% endif %}
+{% if gitlab.aws_storage_enabled %}
+        registry['storage'] = {
+          's3' => {
+            'bucket' => '{{ gitlab.aws_storage_bucket }}',
+            'region' => '{{ aws.region }}',
+            'aws_access_key_id' => '{{ aws.access_key }}',
+            'aws_secret_access_key' => '{{ aws.secret_key }}'
+          }
+        }
+        registry['storagedriver_health_enabled'] = false
+        gitlab_rails['artifacts_enabled'] = true
+        gitlab_rails['artifacts_object_store_enabled'] = true
+        gitlab_rails['artifacts_object_store_remote_directory'] = "{{ gitlab.aws_storage_bucket }}"
+        gitlab_rails['artifacts_object_store_connection'] = {
+          'provider' => 'AWS',
+          'region' => '{{ aws.region }}',
+          'aws_access_key_id' => '{{ aws.access_key }}',
+          'aws_secret_access_key' => '{{ aws.secret_key }}'
+        }
+{% endif %}
+{% if gitlab.aws_backup_enabled %}
+        # https://docs.gitlab.com/ee/raketasks/backup_restore.html#using-amazon-s3
+        gitlab_rails['backup_upload_connection'] = {
+          'provider' => 'AWS',
+          'region' => '{{ aws.region }}',
+          'aws_access_key_id' => '{{ aws.access_key }}',
+          'aws_secret_access_key' => '{{ aws.secret_key }}'
+        }
+        gitlab_rails['backup_upload_remote_directory'] = '{{ aws_backup_bucket }}'
+        gitlab_rails['backup_storage_class'] = 'STANDARD_IA'
+        gitlab_rails['env'] = {
+          "SKIP" => "db,uploads,artifacts,lfs"
+        }
+{% endif %}
+        gitlab_rails['initial_root_password'] = '{{ lookup('password', './settings/passwords/gitlab_root_password chars=ascii_letters') }}'
+        gitlab_rails['initial_shared_runners_registration_token'] = '{{ lookup('password', './settings/passwords/gitlab_runners_token chars=ascii_letters') }}'
+        gitlab_rails['auto_migrate'] = true
+        gitlab_rails['registry_enabled'] = true
+        gitlab_rails['registry_host'] = "https://registry.{{ domain }}"
+        gitlab_rails['registry_port'] = 5782
+        gitlab_rails['registry_api_url'] = "http://registry:5000"
+        gitlab_rails['registry_key_path'] = "/certs/registry.pem"
+        gitlab_rails['registry_issuer'] = "gitlab.{{ domain }}"
+        registry['enable'] = false
+        gitlab_rails['time_zone'] = '{{ common_timezone }}'
+        gitlab_rails['gitlab_default_theme'] = 7
+        gitlab_rails['usage_ping_enabled'] = false
+        postgresql['enable'] = false
+        gitlab_rails['db_host'] = 'gitlab_db'
+        gitlab_rails['db_port'] = '5432'
+        gitlab_rails['db_username'] = 'gitlab_user'
+        gitlab_rails['db_password'] = '{{ lookup('password', './settings/passwords/gitlab_db_password chars=ascii_letters') }}'
+        gitlab_rails['db_database'] = 'gitlab_db'
+        gitlab_rails['db_adapter'] = 'postgresql'
+        gitlab_rails['db_encoding'] = 'utf8'
+        gitlab_rails['gitlab_email_enabled'] = true
+        gitlab_rails['gitlab_email_from'] = 'gitlab@{{ domain }}'
+        gitlab_rails['gitlab_email_display_name'] = 'gitlab.{{ domain }}'
+        gitlab_rails['gitlab_email_reply_to'] = 'gitlab@{{ domain }}'
+        gitlab_rails['gitlab_email_subject_suffix'] = ''
+        registry_external_url 'https://gitlab.{{ domain }}:4567'
+        registry_nginx['enable'] = true
+        registry_nginx['listen_port'] = 4567
+        registry_nginx['listen_https'] = false
+        gitlab_rails['gitlab_default_projects_features_issues'] = true
+        gitlab_rails['gitlab_default_projects_features_merge_requests'] = true
+        gitlab_rails['gitlab_default_projects_features_wiki'] = true
+        gitlab_rails['gitlab_default_projects_features_snippets'] = true
+        gitlab_rails['gitlab_default_projects_features_builds'] = true
+        gitlab_rails['gitlab_default_projects_features_container_registry'] = false
+        letsencrypt['enable'] = false
+    networks:
+      - traefik_network
+      - gitlab
+    depends_on:
+      - gitlab_db
+    volumes:
+      - "{{ volumes_root }}/gitlab/config:/etc/gitlab"
+      - "{{ volumes_root }}/gitlab/logs:/var/log/gitlab"
+      - "{{ volumes_root }}/gitlab/data:/var/opt/gitlab"
+      - "{{ volumes_root }}/gitlab/certs:/certs"
+      - "{{ volumes_root }}/gitlab/backups:/var/opt/gitlab/backups"
+    ports:
+      - "{{ gitlab.ssh_port }}:22"

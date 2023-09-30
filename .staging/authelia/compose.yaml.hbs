@@ -1,0 +1,11 @@
+services:
+  authelia:
+    # authelia/authelia:
+    image: {{ image.name }}:{{ image.tag }}
+    container_name: {{ service }}
+    hostname: {{ hostname }}
+    restart: {{ restart }}
+    environment:
+      - TZ={{ tz }}
+    volumes:
+      - "{{volumes.etc }}:/config"

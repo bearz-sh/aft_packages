@@ -1,0 +1,19 @@
+services:
+  # https://gitlab.com/NickBusey/HomelabOS/-/blob/dev/roles/restic/templates/docker-compose.restic.yml.j2?ref_type=heads
+  # https://restic.net/
+  #Backups: https://homelabos.com/docs/setup/backups/
+  restic:
+    image: ghcr.io/lobaro/restic-backup-docker:{{ restic.version }}
+    restart: unless-stopped
+    environment:
+      - RESTIC_REPOSITORY={{ s3_path }}
+      - AWS_ACCESS_KEY_ID={{ s3_access_key }}
+      - AWS_SECRET_ACCESS_KEY={{ s3_secret_key }}
+      - RESTIC_PASSWORD={{ s3_backup_password }}
+      - BACKUP_CRON={{ s3_backup_cron }}
+      - HOSTNAME={{ domain }}
+      - RESTIC_JOB_ARGS="--exclude=minio --host {{ domain }}"
+      - RESTIC_FORGET_ARGS="{{ restic.forget_args }}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - "{{ volumes_root }}:/data:ro"

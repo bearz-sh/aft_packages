@@ -1,0 +1,21 @@
+services:
+  # S3 Storage for Backups via Restic
+  # https://gitlab.com/NickBusey/HomelabOS/-/blob/dev/roles/minio/templates/docker-compose.minio.yml.j2?ref_type=heads
+  # https://min.io/docs/minio/container/index.html
+  minio:
+    image: minio/minio:{{ minio.version }}
+    networks:
+      - traefik_network
+    restart: unless-stopped
+    command: server --console-address ":9001" /data
+    volumes:
+      - "{{ storage_dir }}/Backups/minio:/data"
+      - "{{ volumes_root }}/minio/config:/root/.minio/"
+    ports:
+      - 9110:9000
+    environment:
+      MINIO_UID: {{ uid_output.stdout }}
+      MINIO_GID: {{ gid_output.stdout }}
+      MINIO_ACCESS_KEY: {{minio_access_key}}
+      MINIO_SECRET_KEY: {{minio_secret_access_key}}
+{% include './labels.j2' %}
