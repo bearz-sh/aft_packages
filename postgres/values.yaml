@@ -6,7 +6,7 @@ hostname: postgres
 ports:
   default: 5432
 dns:
-  subdomain: traefik
+  subdomain: postgres
 
 postgres:
   user: aft_user
@@ -17,6 +17,9 @@ healthcheck:
   interval: 10s
   retries: 10
   startPeriod: 30s
+
+traefik: false
+watchtower: true
 
 networks:
   default:

@@ -1,27 +1,41 @@
 api:
   dashboard: true
-  insecure: true
 
 log:
-  level: ERROR
+  level: {{ log.level }}
+{{#if log.file }}
+  filePath: "/var/log/traefik/log"
+{{/if}}
+{{#if log.format }}
+  format: "{{ log.format }}"
+{{/if}}
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
 
 entryPoints:
   http:
     address: ":80"
   https:
     address: ":443"
-  influxdb:
-    address: ":8086"
-  redis:
-    address: ":6379"
   postgres:
     address: ":5432"
+  redis:
+    address: ":6379"
   mssql:
     address: ":1433"
+  influxdb:
+    address: ":8086"
   mysql:
     address: ":3306"
-  gitlab:
-    address: ":2232"
+  rabbitmq:
+    address: ":5672"
+  mongodb:
+    address: ":27017"
+{{#each entryPoints}}
+  {{@key}}:
+    address: "{{this.address}}"
+{{/each}}
 
 providers:
   docker:

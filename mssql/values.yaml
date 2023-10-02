@@ -1,11 +1,15 @@
 restart: unless-stopped
 hostname: mssql
 
+pgid: 1000
+puid: 1000
+user: root
+
 ports:
   default: 1433
 
 dns:
-  subdomain: traefik
+  subdomain: mssql
 
 mssql:
   pid: "Developer"
@@ -15,6 +19,9 @@ healthcheck:
   interval: 10s
   retries: 10
   startPeriod: 90s
+
+traefik: false
+watchtower: true
 
 networks:
   default:

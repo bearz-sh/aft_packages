@@ -1,11 +1,10 @@
 services:
-  dashy:
+  rabbitmq:
     image: {{ image.name }}:{{ image.tag }}
     container_name: {{ service }}
     hostname: {{ hostname }}
     restart: {{ restart }}
     environment:
-      NODE_ENV: {{ node.env }}
       TZ: {{ tz }}
       PUID: {{ puid }}
       PGID: {{ pgid }}
@@ -14,18 +13,15 @@ services:
       {{@key}}: "{{this}}"
 {{/each}}
 {{/if}}
-{{#unless traefik }}
     ports:
-      - "{{ ports.default }}:80"
+      - '{{ports.default}}:5672'
+{{#unless traefik }}
+      - '{{ports.ui}}:15672'
 {{/unless}}
     volumes:
-      - {{ volumes.etc }}/conf.yml:/app/public/conf.yml
-    healthcheck:
-      test: [ 'CMD', 'node', '/app/services/healthcheck' ]
-      interval: {{ healthcheck.interval }}
-      timeout: {{ healthcheck.timeout }}
-      retries: {{ healthcheck.retries }}
-      start_period: {{ healthcheck.startPeriod }}
+      - "{{ volumes.data }}:/var/lib/rabbitmq"
+      - "{{ volumes.log }}:/var/log/rabbitmq"
+      - "{{ volumes.etc }}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf"
     labels:
       - "aft.service={{ service }}"
 {{#if traefik }}
@@ -33,14 +29,10 @@ services:
       - "traefik.http.routers.{{ service }}-tls.entrypoints=https"
       - "traefik.http.routers.{{ service }}-tls.rule=Host(`{{ dns.subdomain }}.{{ dns.domain }}`)"
       - "traefik.http.routers.{{ service }}-tls.tls=true"
+      - "traefik.http.services.{{ service }}.loadBalancer.server.port={{ ports.ui }}"
 {{/if}}
 {{#if watchtower }}
       - "com.centurylinklabs.watchtower.enable=true"
-{{/if}}
-{{#if labels}}
-{{#each labels}}
-      - "{{this}}"
-{{/each}}
 {{/if}}
     networks:
 {{#each networks}}

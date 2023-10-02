@@ -5,6 +5,21 @@ dns:
 host:
   ip: 127.0.0.1
 
+log:
+  level: INFO
+  file: false
+  format: null
+
+api:
+  insecure: false
+
+
+entryPoints:
+
+  
+  
+  
+
 networks:
   default:
     assignIp: true

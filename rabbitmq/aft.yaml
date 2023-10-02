@@ -1,0 +1,14 @@
+name: rabbmitmq
+description: |
+  RabbitMQ is the most widely deployed open source message broker.
+service: rabbitmq
+version: "0.0.1"
+icon: https://d1q6f0aelx0por.cloudfront.net/product-logos/library-rabbitmq-logo.png
+site: https://www.rabbitmq.com/
+image: 
+  name: rabbitmq
+  tag: 3-management
+license: MPL-2.0
+licenseUrl: https://www.rabbitmq.com/mpl.html
+repository: https://github.com/rabbitmq/rabbitmq-server
+packageRepository: https://github.com/bearz-sh/aft_packages/rabbitmq

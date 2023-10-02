@@ -14,15 +14,29 @@ services:
     volumes:
       - {{ volumes.etc }}:/root
       - {{ volumes.certs }}:/etc/certs
-    networks:
-{{#if networks.default.assignIp }}
-      aft-vnet:
-        ipv4_address: {{ networks.default.cidr[0] }}.{{ networks.default.cidr[1] }}.{{ networks.default.suffix }}
-{{else}}
-      - aft-vnet
+    labels:
+      - "aft.service={{ service }}"
+{{#if watchtower}}
+      - "com.centurylinklabs.watchtower.enable=true"
 {{/if}}
+{{#if labels}}
+{{#each labels}}
+      - "{{this}}"
+{{/each}}
+{{/if}}
+    networks:
+{{#each networks}}
+    {{#if this.assignIp }}
+      {{ this.name }}:
+        ipv4_address: {{ this.cidr.[0] }}.{{ this.cidr.[1] }}.{{ this.suffix }}
+    {{else}}
+      - {{ this.name }}:
+    {{/if}}
+{{/each}}
 
 networks:
-  aft-vnet:
+{{#each networks}}
+  {{this.name}}:
     external: true
-    name: {{ networks.default.name }}
+    name: {{ this.name }}  
+{{/each}}

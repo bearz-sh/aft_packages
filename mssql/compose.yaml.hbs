@@ -7,34 +7,62 @@ services:
 {{#if memory.limit }}
     mem_limit: {{ memory.limit }}
 {{/if}}
+{{#unless os.windows}}
+    user: {{ user }}
+{{/unless}}
     environment:
       TZ: {{ tz }}
-      PUID: {{ puid }}
-      PGID: {{ pgid }}
       SA_PASSWORD: "${MSSQL_PASSWORD:-CHANGEm3!}"
       ACCEPT_EULA: "Y"
       MSSQL_PID: {{ mssql.pid }}
+{{#if environment}}
+{{#each environment}}
+      {{@key}}: "{{this}}"
+{{/each}}
+{{/if}}
+{{#unless traefik}}
     ports:
       - "{{ ports.default }}:1433"
+{{/unless}}
     volumes:
       - "{{ volumes.data }}:/var/opt/mssql/data"
-
+      - "{{ volumes.logs }}:/var/opt/mssql/log"
+      - "{{ volumes.cache }}:/var/opt/mssql/secrets"
     healthcheck:
       test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S",  "localhost", "-U", "sa", "-P", "${MSSQL_PASSWORD:-CHANGEm3!}", "-Q", "SELECT 1"]
       timeout: {{ healthcheck.timeout }}
       interval: {{ healthcheck.interval }}
       retries: {{ healthcheck.retries }}
       start_period: {{ healthcheck.startPeriod }}
-
-    networks:
-{{#if networks.default.assignIp }}
-      aft-vnet:
-        ipv4_address: {{ networks.default.cidr.[0] }}.{{ networks.default.cidr.[1] }}.{{ networks.default.suffix }}
-{{else}}
-      - aft-vnet
+    labels:
+      - "aft.service={{ service }}"
+{{#if traefik}}
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.{{ service }}.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.{{ service }}.entryPoints=mssql"
+      - "traefik.tcp.services.{{ service }}.loadbalancer.server.port={{ ports.default }}"
 {{/if}}
+{{#if watchtower}}
+      - "com.centurylinklabs.watchtower.enable=true"
+{{/if}}
+{{#if labels}}
+{{#each labels}}
+      - "{{this}}"
+{{/each}}
+{{/if}}
+    networks:
+{{#each networks}}
+    {{#if this.assignIp }}
+      {{ this.name }}:
+        ipv4_address: {{ this.cidr.[0] }}.{{ this.cidr.[1] }}.{{ this.suffix }}
+    {{else}}
+      - {{ this.name }}:
+    {{/if}}
+{{/each}}
 
 networks:
-  aft-vnet:
+{{#each networks}}
+  {{this.name}}:
     external: true
-    name: {{ networks.default.name }}
+    name: {{ this.name }}  
+{{/each}}

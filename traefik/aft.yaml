@@ -7,4 +7,4 @@ version: "0.0.1"
 site: https://traefik.io/
 image: 
   name: traefik
-  tag: latest
+  tag: "3.0"

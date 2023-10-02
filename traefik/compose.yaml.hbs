@@ -4,14 +4,19 @@ services:
     container_name: {{ service }}
     hostname: {{ hostname }}
     restart: {{ restart }}
-    ports:
-      - "{{ host.ip }}:80:80"
-      - "{{ host.ip }}:443:443"
-      - "{{ host.ip }}:8080:8080"
     environment:
       TZ: "{{ tz }}"
       PUID: {{ puid }}
       PGID: {{ pgid }}
+{{#if environment}}
+{{#each environment}}
+      {{@key}}: "{{this}}"
+{{/each}}
+{{/if}}
+    ports:
+      - "{{ host.ip }}:80:80"
+      - "{{ host.ip }}:443:443"
+      - "{{ host.ip }}:8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 {{#if ca.selfSigned}}
@@ -19,6 +24,7 @@ services:
 {{/if}}
       - {{ volumes.etc }}/traefik.yaml:/etc/traefik/traefik.yaml
       - {{ volumes.certs }}:/etc/certs
+      - {{ volumes.logs }}:/var/log/traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.{{ name }}.entrypoints=https"
@@ -28,15 +34,24 @@ services:
       - "traefik.http.services.{{ name }}.loadbalancer.server.port=8080"
       - "traefik.http.services.{{ name }}.loadbalancer.sticky.cookie.httpOnly=true"
       - "traefik.http.services.{{ name }}.loadbalancer.sticky.cookie.secure=true"
-    networks:
-{{#if networks.default.assignIp }}
-      aft-vnet:
-        ipv4_address: {{ networks.default.cidr.[0] }}.{{ networks.default.cidr.[1] }}.{{ networks.default.suffix }}
-{{else}}
-      - aft-vnet
+{{#if labels}}
+{{#each labels}}
+      - "{{this}}"
+{{/each}}
 {{/if}}
+    networks:
+{{#each networks}}
+    {{#if this.assignIp }}
+      {{ this.name }}:
+        ipv4_address: {{ this.cidr.[0] }}.{{ this.cidr.[1] }}.{{ this.suffix }}
+    {{else}}
+      - {{ this.name }}:
+    {{/if}}
+{{/each}}
 
 networks:
-  aft-vnet:
+{{#each networks}}
+  {{this.name}}:
     external: true
-    name: {{ networks.default.name }}
+    name: {{ this.name }}  
+{{/each}}

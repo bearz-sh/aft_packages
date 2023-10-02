@@ -7,10 +7,11 @@ watchtower:
   schedule: "0 0 4 * * MON"
   pollInterval: null
   enableLabel: true
-   gotifyPort: 443
   notifications:
     url: null
    
+
+
 
 networks:
   default:

@@ -5,6 +5,8 @@ command: |
 dns:
   subdomain: traefik
 
+traefik: false # not enabled yet
+watchtower: true
 
 ports:
   default: 6379

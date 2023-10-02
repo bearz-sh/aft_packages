@@ -11,6 +11,11 @@ services:
       POSTGRES_USER: {{ postgres.user }}
       POSTGRES_DB: {{ postgres.db }}
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-CHANGEm3!}"
+{{#if environment}}
+{{#each environment}}
+      {{@key}}: "{{this}}"
+{{/each}}
+{{/if}}
     ports:
       - "{{ ports.default }}:5432"
     volumes:
@@ -29,15 +34,35 @@ services:
       interval: {{ healthcheck.interval }}
       retries: {{ healthcheck.retries }}
       start_period: {{ healthcheck.startPeriod }}
-    networks:
-{{#if networks.default.assignIp }}
-      aft-vnet:
-        ipv4_address: {{ networks.default.cidr.[0] }}.{{ networks.default.cidr.[1] }}.{{ networks.default.suffix }}
-{{else}}
-      - aft-vnet
+    labels:
+      - "aft.service={{ service }}"
+{{#if watchtower}}
+      - "com.centurylinklabs.watchtower.enable=true"
 {{/if}}
+{{#if traefik}}
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.{{ service }}.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.{{ service }}.entryPoints=postgres"
+      - "traefik.tcp.services.{{ service }}.loadbalancer.server.port={{ ports.default }}"
+{{/if}}
+{{#if labels}}
+{{#each labels}}
+      - "{{this}}"
+{{/each}}
+{{/if}}
+    networks:
+{{#each networks}}
+    {{#if this.assignIp }}
+      {{ this.name }}:
+        ipv4_address: {{ this.cidr.[0] }}.{{ this.cidr.[1] }}.{{ this.suffix }}
+    {{else}}
+      - {{ this.name }}:
+    {{/if}}
+{{/each}}
 
 networks:
-  aft-vnet:
+{{#each networks}}
+  {{this.name}}:
     external: true
-    name: {{ networks.default.name }}
+    name: {{ this.name }}  
+{{/each}}
